@@ -133,3 +133,80 @@ class MicroPyStateMachine:
                 self.internalLooping = False
                 return
             sleep(self.loopDelay)
+           
+class MicroPyBuffer:
+    """
+    Class wrapper for a simple circular buffer.
+    """
+    def __init__(self, length, overwrite=True, readChronological=True):
+        self.length = length
+        self.buffer = []
+        self.writer = 0
+        self.reader = 0
+        self.overwrite = overwrite
+        self.readChronological = readChronological
+
+        self.initBuffer()
+
+    def initBuffer(self):
+        """
+        Initializes buffer with all None value types.
+        :return: Nothing.
+        """
+        for i in range(self.length):
+            self.buffer[i] = None
+
+    def isReadable(self):
+        """
+        Returns True if there is any data in the buffer, otherwise False.
+        :return: Boolean.
+        """
+        if self.buffer[self.reader] is None:
+            return False
+        else:
+            return True
+
+    def isWriteable(self):
+        """
+        Returns True if there is an open spot to write data in the buffer or if overwrite is allowed.
+        :return: Boolean.
+        """
+        if self.overwrite:
+            return True
+        elif self.buffer[self.writer] is None:
+            return True
+        else:
+            return False
+
+    def add(self, data):
+        """
+        Adds piece of data to the next writeable spot in the buffer, then increments writer cursor. If failed, cursor
+            does not increment.
+        :param data: Data to be added.
+        :return: True for success, False for failure.
+        """
+        if self.buffer[self.writer] is None:
+            self.buffer[self.writer] = data
+            self.writer = (self.writer + 1) % self.length
+            return True
+        elif self.overwrite:
+            self.buffer[self.writer] = data
+            self.writer = (self.writer + 1) % self.length
+            if self.readChronological:
+                self.reader = (self.writer + 1) % self.length
+            return True
+        else:
+            return False
+
+    def get(self):
+        """
+        Gets next available piece of data in the buffer.
+        :return: Data found or None.
+        """
+        if self.buffer[self.reader] is None:
+            return None
+        else:
+            data = self.buffer[self.reader]
+            self.buffer[self.reader] = None
+            self.reader = (self.reader + 1) % self.length
+            return data
