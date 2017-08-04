@@ -145,8 +145,28 @@ class MicroPyBuffer:
         self.reader = 0
         self.overwrite = overwrite
         self.readChronological = readChronological
+        self.ready = None
 
+        self.typeCheck()
         self.initBuffer()
+
+    def typeCheck(self):
+        """
+        CHecks if necessary fields for the buffer are of the correct type. Will set ready status to true if all fields
+            meet the requirements.
+        :return: Nothing.
+        """
+        if not type(self.length) is int:
+            print("Error: invalid length argument type.")
+            self.ready = False
+        elif not type(self.overwrite) is type(False):
+            print("Error: invalid overwrite argument type.")
+            self.ready = False
+        elif not type(self.readChronological) is type(False):
+            print("Error: invalid readChronological argument type.")
+            self.ready = False
+        else:
+            self.ready = True
 
     def initBuffer(self):
         """
@@ -155,12 +175,30 @@ class MicroPyBuffer:
         """
         for i in range(self.length):
             self.buffer[i] = None
+    
+    def reset(self):
+        """
+        Resets buffer to initial conditions and resets cursors to 0.
+        :return: Nothing.
+        """
+        self.initBuffer()
+        self.reader = 0
+        self.writer = 0
+
+    def isReady(self):
+        """
+        Returns True if parameters for the buffer are of correct type, otherwise False.
+        :return: Boolean.
+        """
+        return self.ready
 
     def isReadable(self):
         """
         Returns True if there is any data in the buffer, otherwise False.
         :return: Boolean.
         """
+        if not self.ready:
+            return False
         if self.buffer[self.reader] is None:
             return False
         else:
@@ -171,13 +209,33 @@ class MicroPyBuffer:
         Returns True if there is an open spot to write data in the buffer or if overwrite is allowed.
         :return: Boolean.
         """
+        if not self.ready:
+            return False
         if self.overwrite:
             return True
         elif self.buffer[self.writer] is None:
             return True
         else:
             return False
-
+        
+    def toggleOverwrite(self):
+        """
+        Toggles overwrite status.
+        :return: Nothing.
+        """
+        if not self.ready:
+            return
+        self.overwrite = not self.overwrite
+        
+    def toggleReadChronological(self):
+        """
+        Toggles readChronological status.
+        :return: Nothing.
+        """
+        if not self.ready:
+            return
+        self.readChronological = not self.readChronological
+        
     def add(self, data):
         """
         Adds piece of data to the next writeable spot in the buffer, then increments writer cursor. If failed, cursor
@@ -185,6 +243,8 @@ class MicroPyBuffer:
         :param data: Data to be added.
         :return: True for success, False for failure.
         """
+        if not self.ready:
+            return False
         if self.buffer[self.writer] is None:
             self.buffer[self.writer] = data
             self.writer = (self.writer + 1) % self.length
@@ -201,8 +261,10 @@ class MicroPyBuffer:
     def get(self):
         """
         Gets next available piece of data in the buffer.
-        :return: Data found or None.
+        :return: Data found or None. Returns False if ready status is not met.
         """
+        if not self.ready:
+            return False
         if self.buffer[self.reader] is None:
             return None
         else:
@@ -210,3 +272,18 @@ class MicroPyBuffer:
             self.buffer[self.reader] = None
             self.reader = (self.reader + 1) % self.length
             return data
+
+    def jumpToNew(self):
+        """
+        Jumps reader to most recently written data in buffer and sets all other values to None.
+        :return: Nothing.
+        """
+        if not self.ready:
+            return
+        newIndex = self.reader - 1
+        if newIndex < 0:
+            newIndex = self.length - 1
+        for i in range(self.length):
+            if not i == newIndex:
+                self.buffer[i] = None
+        self.reader = newIndex
