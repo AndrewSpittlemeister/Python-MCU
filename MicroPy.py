@@ -11,7 +11,7 @@ class MicroPyInterrupt:
         self.interval = INTERVAL
         self.event = event_function
         self.run = False
-        self.timer = 0
+        self.timer = None
         self.event_counter = 0
 
     def start(self):
