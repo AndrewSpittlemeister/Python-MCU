@@ -424,3 +424,48 @@ class MicroPyPID:
 
         return output
 
+class MicroPyRollingAverage:
+    """
+    Class wrapper for computing rolling average.
+    """
+    def __init__(self, sampleSize = None):
+        self.sampleSize = sampleSize
+        self.average = 0
+        self.ready = None
+        self.typeCheck()
+
+    def typeCheck(self):
+        """
+        Verifies that sampleSize is of the correct type and sets ready status.
+        :return: Nothing.
+        """
+        self.ready = True
+
+        if not (type(self.sampleSize) is float or type(self.sampleSize) is int):
+            print("Error: invalid sampleSize type.")
+            self.ready = False
+
+        print("Ready Status: ", self.ready)
+
+    def getAverage(self, newSample = None):
+        """
+        Computes latest running average if valid newSample parameter is filled and returns average, otherwise just
+            returns the last average.
+        :param newSample: Optional parameter to added to the rolling average.
+        :return: Latest running average value or False if ready status is False.
+        """
+        if not self.ready:  # check ready status
+            print("Error: not ready to execute.")
+            return False
+
+        if newSample is None:  # return average without processing new sample
+            return self.average
+
+        elif not (type(newSample) is float or type(newSample) is int):
+            print("Error: invalid newSample type.")
+            return self.average
+
+        else:  # process new sample and return updated average
+            self.average -= self.average / self.sampleSize
+            self.average += newSample / self.sampleSize
+            return self.average
