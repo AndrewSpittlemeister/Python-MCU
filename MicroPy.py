@@ -303,8 +303,7 @@ class MicroPyBuffer:
             if not i == newIndex:
                 self.buffer[i] = None
         self.reader = newIndex
-
-
+        
 class MicroPyPID:
     """
     Class wrapper for defining and running a PID control loop.
@@ -327,6 +326,37 @@ class MicroPyPID:
 
         self.ready = None
         self.typeCheck()
+        
+    def reset(self, setpoint, CObias, timeDelta = None, upperSumBound = None, lowerSumBound = None, Kc = None, Ki = None, Kd = None):
+        """
+        Resets all PID parameters and starts control loop over.
+        :return: Nothing.
+        """
+        self.setpoint = setpoint
+
+        self.CObias = CObias
+        self.Kc = Kc
+        self.Ki = Ki
+        self.Kd = Kd
+
+        self.timeDelta = timeDelta
+        self.prevError = 0
+        self.errorSum = 0
+        self.upperSumBound = upperSumBound
+        self.lowerSumBound = lowerSumBound
+
+        self.loopType = self.getLoopType()
+
+        self.ready = None
+        self.typeCheck()
+        
+    def clear(self):
+        """
+        Only clears prevError and errorSum to 0.
+        :return: Nothing.
+        """
+        self.prevError = 0
+        self.errorSum = 0
 
     def getLoopType(self):
         """
@@ -338,7 +368,7 @@ class MicroPyPID:
             loopType += 'P'
             if self.Ki is not None:
                 loopType += 'I'
-                if self.kd is not None:
+                if self.Kd is not None:
                     loopType += 'D'
         return loopType
 
