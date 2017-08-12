@@ -1,8 +1,6 @@
 from MicroPy import MicroPyInterrupt
 import time
 
-# Test Edit
-
 def do_something():
     print(time.time() - T[0])
     T[0] = time.time()
