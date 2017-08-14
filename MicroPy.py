@@ -499,3 +499,27 @@ class MicroPyRollingAverage:
             self.average -= self.average / self.sampleSize
             self.average += newSample / self.sampleSize
             return self.average
+
+        
+def byteFormat(data):
+    """
+    Takes data in the form of integers, bytes, strings, or bytearrays, and returns the same data as a bytearray.
+    :param data: Input data (int, byte, string, bytearray).
+    :return: Output data (bytearray).
+    """
+    if type(data) is int:
+        data = hex(data)[2:]
+        if len(data) % 2 == 1:  # then odd
+            data = bytearray.fromhex('0' + data)
+        else:
+            data = bytearray.fromhex(data)
+
+    elif type(data) is bytes:
+        data = bytearray(data)
+
+    elif type(data) is str:
+        data = bytearray(data.encode('utf-8'))
+
+    elif type(data) is bytearray:
+        pass
+    return data
